@@ -5,9 +5,3 @@
       context: .
       dockerfile: src/Server/Dockerfile
 
-  testcli:
-    image: testcli
-    build:
-      context: .
-      dockerfile: TestCLI/Dockerfile
-
