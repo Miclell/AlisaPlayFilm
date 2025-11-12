@@ -1,0 +1,13 @@
+﻿services:
+  server:
+    image: server
+    build:
+      context: .
+      dockerfile: src/Server/Dockerfile
+
+  testcli:
+    image: testcli
+    build:
+      context: .
+      dockerfile: TestCLI/Dockerfile
+
