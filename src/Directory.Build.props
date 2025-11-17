@@ -1,10 +1,15 @@
 ﻿<Project>
     <PropertyGroup>
-        <TargetFramework>net9.0-windows</TargetFramework>
+        <!-- По умолчанию используем net9.0-windows для разработки на Windows -->
+        <!-- Но если TargetFrameworkOverride установлен (передается через /p:), используем его -->
+        <_DefaultTargetFramework>net9.0-windows</_DefaultTargetFramework>
+        <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">$(TargetFrameworkOverride)</TargetFramework>
+        <TargetFramework Condition="'$(TargetFrameworkOverride)' == ''">$(_DefaultTargetFramework)</TargetFramework>
         
-        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'linux-x64'">net9.0</TargetFramework>
-        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'osx-x64'">net9.0</TargetFramework>
-        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'osx-arm64'">net9.0</TargetFramework>
+        <!-- Если TargetFrameworkOverride не установлен, но указан RuntimeIdentifier, переключаемся автоматически -->
+        <TargetFramework Condition="'$(TargetFrameworkOverride)' == '' AND '$(RuntimeIdentifier)' == 'linux-x64'">net9.0</TargetFramework>
+        <TargetFramework Condition="'$(TargetFrameworkOverride)' == '' AND '$(RuntimeIdentifier)' == 'osx-x64'">net9.0</TargetFramework>
+        <TargetFramework Condition="'$(TargetFrameworkOverride)' == '' AND '$(RuntimeIdentifier)' == 'osx-arm64'">net9.0</TargetFramework>
         
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
