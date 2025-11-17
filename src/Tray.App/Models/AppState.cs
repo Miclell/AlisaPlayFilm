@@ -20,6 +20,7 @@ public class AppState
     public DateTime StartTime { get; set; }
     public string? LastError { get; set; }
     public int ErrorCount { get; set; }
+    public string? ServerUrl { get; set; }
 
     public event Action? StatusChanged;
 }

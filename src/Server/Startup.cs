@@ -44,7 +44,12 @@ public class Startup
         logger.LogInformation("Application starting...");
         logger.LogInformation("Environment: {Environment}", env.EnvironmentName);
         logger.LogInformation("Content Root: {ContentRoot}", env.ContentRootPath);
-        logger.LogInformation("Web Root: {WebRoot}", env.WebRootPath);
+        
+        // WebRoot используется только для статических файлов (wwwroot), в API приложении не требуется
+        if (!string.IsNullOrEmpty(env.WebRootPath))
+        {
+            logger.LogInformation("Web Root: {WebRoot}", env.WebRootPath);
+        }
 
         // Swagger доступен всегда (можно ограничить только для Development если нужно)
         app.UseSwagger();

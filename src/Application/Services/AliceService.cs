@@ -32,7 +32,7 @@ public class AliceService(
                 var response =
                     CreateResponse(
                         "Пожалуйста, укажите название фильма. Например: 'Включи Матрицу' или 'Найди фильм Интерстеллар'",
-                        request.Session);
+                        request.Session, false);
                 response.Session = request.Session;
                 return response;
             }
@@ -45,7 +45,7 @@ public class AliceService(
             {
                 var response =
                     CreateResponse($"К сожалению, не удалось найти фильм '{filmName}'. Попробуйте другое название.",
-                        request.Session);
+                        request.Session, false);
                 response.Session = request.Session;
                 return response;
             }
@@ -94,14 +94,14 @@ public class AliceService(
         return "";
     }
 
-    private static AliceResponse CreateResponse(string text, Session requestSession)
+    private static AliceResponse CreateResponse(string text, Session requestSession, bool endSession = true)
     {
         return new AliceResponse
         {
             Response = new Response
             {
                 Text = text,
-                EndSession = true
+                EndSession = endSession
             },
             Session = requestSession
         };

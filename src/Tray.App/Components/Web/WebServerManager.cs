@@ -34,12 +34,11 @@ public class WebServerManager(
 
                     config.Sources.Clear();
 
+                    // 1. Вшитые конфиги (базовые значения)
                     config.AddEmbeddedJson("appsettings.json");
                     config.AddEmbeddedJson($"appsettings.{environmentName}.json", true);
 
-                    config.AddJsonFile("appsettings.json", true, true);
-                    config.AddJsonFile($"appsettings.{environmentName}.json", true, true);
-
+                    // 2. Пользовательские конфиги из appdata (для продакшена)
                     var userConfigPath = UserConfigStore.EnsureDefaultConfig("appsettings.json");
                     config.AddJsonFile(userConfigPath, true, true);
 
@@ -48,6 +47,12 @@ public class WebServerManager(
                     if (File.Exists(envUserPath))
                         config.AddJsonFile(envUserPath, true, true);
 
+                    // 3. Локальные конфиги рядом с exe (для разработки - имеют приоритет)
+                    // В Debug режиме они загружаются ПОСЛЕ пользовательских, чтобы перекрывать их
+                    config.AddJsonFile("appsettings.json", true, true);
+                    config.AddJsonFile($"appsettings.{environmentName}.json", true, true);
+
+                    // 4. Переменные окружения и командная строка (высший приоритет)
                     config.AddEnvironmentVariables();
 
                     if (commandLineArgs.Length > 0)
@@ -65,13 +70,41 @@ public class WebServerManager(
 
                     webBuilder.ConfigureServices((_, services) =>
                     {
-                        // Заменяем IBrowserLogWriter в DI на наш экземпляр
                         var existingService = services.FirstOrDefault(s => s.ServiceType == typeof(IBrowserLogWriter));
                         if (existingService != null) services.Remove(existingService);
                         services.AddSingleton(logWriter);
                     });
                 })
                 .Build();
+
+            // Получаем URL сервера из конфигурации
+            var configuration = _webHost.Services.GetRequiredService<IConfiguration>();
+            
+            // Пробуем получить из Kestrel:Endpoints:Https:Url
+            var httpsUrl = configuration["Kestrel:Endpoints:Https:Url"];
+            
+            // Если не нашли, пробуем из Urls (может быть несколько через ;)
+            if (string.IsNullOrEmpty(httpsUrl))
+            {
+                var urls = configuration["Urls"];
+                if (!string.IsNullOrEmpty(urls))
+                {
+                    httpsUrl = urls.Split(';')
+                        .FirstOrDefault(u => u.Trim().StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+                }
+            }
+            
+            // Если все еще не нашли, используем значение по умолчанию
+            if (string.IsNullOrEmpty(httpsUrl))
+            {
+                httpsUrl = "https://localhost:8980";
+            }
+            
+            // Заменяем 0.0.0.0 на localhost для открытия в браузере
+            httpsUrl = httpsUrl.Replace("0.0.0.0", "localhost");
+            
+            // Сохраняем URL в AppState для использования в трее
+            appState.ServerUrl = httpsUrl;
 
             IsRunning = true;
             appState.IsRunning = true;

@@ -121,13 +121,16 @@ public class TrayManager : IDisposable
     {
         try
         {
-            // Используем HTTPS URL для логов
-            var url = "https://localhost:8980/api/logs";
+            // Получаем URL из конфигурации (из AppState)
+            var baseUrl = _appState.ServerUrl ?? "https://localhost:8980";
+            var url = $"{baseUrl.TrimEnd('/')}/api/logs";
+            
             if (OperatingSystem.IsWindows())
                 Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
             else if (OperatingSystem.IsMacOS())
                 Process.Start("open", url);
-            else if (OperatingSystem.IsLinux()) Process.Start("xdg-open", url);
+            else if (OperatingSystem.IsLinux()) 
+                Process.Start("xdg-open", url);
         }
         catch (Exception ex)
         {
