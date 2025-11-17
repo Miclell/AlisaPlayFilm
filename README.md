@@ -10,6 +10,7 @@
 - **Application** - бизнес-логика, сервисы приложения, DTO
 - **Infrastructure** - реализация интерфейсов (поиск фильмов, открытие браузера)
 - **Server** - веб-API, контроллеры, конфигурация
+- **Tray.App** - приложение на ETO.Forms, которое позволяет запускать сервер в фоне
 
 ## Функциональность
 
@@ -28,45 +29,145 @@
 
 ## Требования
 
-- .NET 9.0
-- Windows, Linux или MacOS
-- Браузер для открытия фильмов
+- **Windows, Linux или macOS** (x64)
+- **Браузер** для открытия фильмов
+- **.NET 9.0 Runtime** (не требуется для релизных бинарников — они self-contained)
+
+> **Примечание:** Для разработки требуется .NET 9.0 SDK
+
+## Установка
+
+### Из релизов (рекомендуется)
+
+1. Перейдите на страницу [Releases](https://github.com/your-username/AlisaPlayFilm/releases) (замените `your-username` на ваш GitHub username)
+2. Скачайте бинарник для вашей ОС:
+   - **Windows:** `AlisaPlayFilm-Windows-x64.exe`
+   - **Linux:** `AlisaPlayFilm-Linux-x64`
+   - **macOS:** `AlisaPlayFilm-macOS-x64`
+
+3. **Windows:** Просто запустите `.exe` файл
+4. **Linux/macOS:** Сделайте файл исполняемым и запустите:
+   ```bash
+   chmod +x AlisaPlayFilm-Linux-x64
+   ./AlisaPlayFilm-Linux-x64
+   ```
+
+Бинарники являются **single-file** и **self-contained** — не требуют установки .NET Runtime и содержат все зависимости.
+
+### Из исходников
+
+```bash
+git clone https://github.com/your-username/AlisaPlayFilm.git
+cd AlisaPlayFilm
+dotnet build
+```
 
 ## Запуск
 
-### Локально
+### С GUI (Tray App) — рекомендуется
+
+Приложение запускается в фоновом режиме с иконкой в системном трее:
+
+- **Windows:** Запустите `AlisaPlayFilm.exe` — приложение появится в трее
+- **Linux:** Запустите бинарник — появится иконка в системном трее (требуется GTK)
+- **macOS:** Запустите бинарник — появится иконка в строке меню
+
+**Возможности:**
+- Управление сервером через контекстное меню трея
+- Просмотр логов через веб-интерфейс
+- Уведомления о статусе сервера
+- Автоматический запуск при старте системы (настраивается в меню)
+
+### Без GUI (только сервер)
+
+Для запуска только веб-сервера без GUI:
 
 ```bash
 dotnet run --project src/Server/Server.csproj
 ```
 
-Приложение будет доступно по адресу:
+Или используйте собранный бинарник Server (если собран отдельно).
+
+**По умолчанию приложение доступно:**
 - HTTP: `http://localhost:8080`
-- HTTPS: `https://localhost:8081`
-
-### Docker
-
-```bash
-cd ops
-docker-compose up --build
-```
+- HTTPS: `https://localhost:8980`
+- Swagger UI: `http://localhost:8080/` или `https://localhost:8980/`
+- Логи: `http://localhost:8080/api/logs` или `https://localhost:8980/api/logs`
 
 ## Конфигурация
 
-Базовые настройки (`appsettings*.json`) вшиты в бинарник, но при первом запуске копируются в пользовательскую директорию, чтобы вы могли менять порты и прочие параметры:
+Базовые настройки вшиты в бинарник, но при первом запуске автоматически создаются пользовательские файлы конфигурации, которые можно редактировать.
+
+### Расположение конфигурационных файлов
 
 - **Windows:** `%AppData%\AlisaPlayFilm\appsettings.json`
 - **Linux:** `${XDG_CONFIG_HOME:-~/.config}/AlisaPlayFilm/appsettings.json`
 - **macOS:** `~/Library/Application Support/AlisaPlayFilm/appsettings.json`
 
-Редактируйте эти файлы для своей установки — приложение автоматически перечитывает их при изменении.  
-В режиме разработки (конфигурация `Debug`) по-прежнему можно работать с исходными файлами `src/Server/appsettings*.json`, они копируются рядом со сборкой и имеют приоритет поверх пользовательских.
+### Настройка портов
+
+Откройте файл `appsettings.json` в пользовательской директории и измените порты:
+
+```json
+{
+  "Kestrel": {
+    "Endpoints": {
+      "Http": {
+        "Url": "http://0.0.0.0:8080"
+      },
+      "Https": {
+        "Url": "https://0.0.0.0:8980"
+      }
+    }
+  }
+}
+```
+
+> **Важно:** Приложение автоматически перечитывает конфигурацию при изменении файла (hot reload).
+
+### Настройка логирования
+
+Уровни логирования настраиваются в том же файле:
+
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.AspNetCore": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    }
+  }
+}
+```
+
+Для режима разработки создайте `appsettings.Development.json` с более детальным логированием.  
 
 ## Настройка вебхука Яндекс Алисы
 
-1. Запустите приложение на вашем сервере
-2. Настройте вебхук в навыке Яндекс Алисы на endpoint: `https://your-server.com/api/alice`
-3. Убедитесь, что сервер доступен из интернета
+### Требования
+
+- Приложение должно быть доступно из интернета по HTTPS
+- Нужен валидный SSL-сертификат (самоподписанный сертификат подходит — Яндекс проверяет только наличие HTTPS)
+
+### Шаги настройки
+
+1. **Запустите приложение** на вашем компьютере или сервере
+2. **Пробросьте порты** на роутере (если приложение на домашнем компьютере):
+   - Порт 8080 (HTTP) — опционально
+   - Порт 8980 (HTTPS) — обязательно
+3. **Настройте вебхук** в навыке Яндекс Алисы:
+   - Endpoint: `https://your-server.com:8980/api/alice`
+   - Или используйте доменное имя, если оно настроено
+4. **Проверьте доступность** — убедитесь, что endpoint доступен из интернета
+
+### Альтернативные варианты для домашнего использования
+
+Если у вас нет статического IP или не хотите пробрасывать порты:
+
+- Используйте **туннели** (Cloudflare Tunnel, Ngrok, LocalTunnel) для создания публичного HTTPS URL
+- Разверните приложение на **облачном VPS** с доменным именем и Let's Encrypt сертификатом
 
 ## API Endpoints
 
@@ -107,59 +208,110 @@ docker-compose up --build
 }
 ```
 
-## Логирование
+## Просмотр логов
 
-Приложение использует встроенное логирование .NET. Уровень логирования настраивается в `appsettings.json`:
+Приложение предоставляет веб-интерфейс для просмотра логов в реальном времени:
 
-```json
-{
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  }
-}
-```
+- **HTML интерфейс:** `http://localhost:8080/api/logs`
+- **SSE поток:** `http://localhost:8080/api/logs/stream`
+- **Экспорт:** `http://localhost:8080/api/logs/export?maxCount=1000`
 
-## Кроссплатформенность
+Логи также можно настроить через `appsettings.json` (см. раздел [Конфигурация](#конфигурация)).
 
-Приложение работает на Windows и Linux:
-- **Windows**: использует `Process.Start` с `UseShellExecute = true`
-- **Linux**: использует `xdg-open` для открытия браузера
+## Дополнительные возможности
+
+### Веб-интерфейс
+
+- **Swagger UI:** Доступен на корневом пути `/` для тестирования API
+- **Логи:** Просмотр логов в реальном времени через `/api/logs`
+- **Экспорт логов:** Скачивание логов в текстовом формате
+
+### Системный трей (Tray App)
+
+При использовании GUI версии доступны:
+
+- Контекстное меню с управлением сервером
+- Уведомления о статусе (старт/остановка/ошибки)
+- Быстрый доступ к логам и настройкам
+- Автозапуск при старте системы
 
 ## Структура проекта
 
 ```
 AlisaPlayFilm/
 ├── src/
-│   ├── Core/              # Доменный слой
-│   ├── Application/       # Слой приложения
-│   ├── Infrastructure/    # Слой инфраструктуры
-│   └── Server/            # Веб-сервер
-├── compose.yaml           # Docker Compose конфигурация
+│   ├── Core/              # Доменный слой (сущности, интерфейсы)
+│   ├── Application/       # Слой приложения (бизнес-логика, сервисы)
+│   ├── Infrastructure/    # Слой инфраструктуры (поиск, браузер, логирование)
+│   ├── Server/            # Веб-сервер (контроллеры, конфигурация)
+│   └── Tray.App/          # GUI приложение (трей-индикатор)
 └── README.md
 ```
 
-## Зависимости
-
-- **HtmlAgilityPack** - для парсинга HTML страниц поиска
-- **Microsoft.Extensions.Http** - для HTTP клиентов
-- **Microsoft.Extensions.Logging** - для логирования
-
 ## Разработка
 
-### Добавление нового источника поиска
+### Требования для разработки
+
+- .NET 9.0 SDK
+
+### Сборка проекта
+
+```bash
+# Восстановление зависимостей
+dotnet restore
+
+# Сборка всех проектов
+dotnet build
+
+# Запуск в режиме разработки
+dotnet run --project src/Tray.App/Tray.App.csproj
+```
+
+### Публикация релизных бинарников
+
+```bash
+# Windows
+dotnet publish src/Tray.App/Tray.App.csproj \
+  -c Release -r win-x64 \
+  -p:PlatformPackage=Eto.Platform.Windows \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -o publish/win-x64
+
+# Linux
+dotnet publish src/Tray.App/Tray.App.csproj \
+  -c Release -r linux-x64 \
+  -p:PlatformPackage=Eto.Platform.Gtk \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -o publish/linux-x64
+
+# macOS
+dotnet publish src/Tray.App/Tray.App.csproj \
+  -c Release -r osx-x64 \
+  -p:PlatformPackage=Eto.Platform.Mac \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -o publish/osx-x64
+```
+
+### Расширение функциональности
+
+#### Добавление нового источника поиска
 
 1. Создайте класс, реализующий `IFilmSearchService` в проекте `Infrastructure`
-2. Зарегистрируйте сервис в `DependencyInjection.cs`
+2. Зарегистрируйте сервис в `Infrastructure/DependencyInjection.cs`
 3. Обновите enum `SearchSource` в проекте `Core`
 
-### Изменение логики извлечения названия фильма
+#### Изменение логики извлечения названия фильма
 
-Логика извлечения названия фильма находится в `AliceService.ExtractFilmName()`. Вы можете добавить дополнительные ключевые слова или изменить алгоритм извлечения.
+Логика извлечения названия фильма находится в `Application/Services/AliceService.ExtractFilmName()`. Вы можете добавить дополнительные ключевые слова или изменить алгоритм извлечения.
+
+#### Добавление новых API endpoints
+
+Создайте новый контроллер в `Server/Controllers/` и зарегистрируйте маршруты в `Startup.cs`.
 
 ## Лицензия
 
-MIT
+MIT — см. [LICENSE](./LICENSE).
 
