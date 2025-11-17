@@ -56,7 +56,6 @@ public class LogsController(IBrowserLogWriter logWriter, IWebHostEnvironment env
             "Log stream connected"
         ));
 
-        // Keep-alive только в Debug режиме - в проде не нужен
         if (env.IsDevelopment()) _ = KeepAliveLoopAsync(cancellationToken);
 
         cancellationToken.Register(() => tcs.TrySetResult());

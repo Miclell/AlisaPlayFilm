@@ -23,7 +23,6 @@ public class Program
     {
         try
         {
-            // Инициализация зависимостей
             _app = new ApplicationEF();
             _appState = new AppState();
             _logWriter = new BrowserLogWriter("System");
@@ -42,7 +41,6 @@ public class Program
 
     private static void InitializeApplication(string[] args)
     {
-        // Создаем TrayIndicator
         var tray = new TrayIndicator
         {
             Title = Constants.AppName,
@@ -50,16 +48,12 @@ public class Program
             Visible = false
         };
 
-        // Создаем NotificationService с TrayIndicator
         _notificationService = new NotificationService(tray, _appState);
 
-        // Создаем WebServerManager
         _webServer = new WebServerManager(_appState, _notificationService, _logWriter);
 
-        // Создаем TrayManager с общим TrayIndicator
         _trayManager = new TrayManager(_appState, _notificationService, _webServer, tray);
 
-        // Запускаем веб-сервер в фоне
         _ = Task.Run(async () => await _webServer.StartAsync(args));
     }
 

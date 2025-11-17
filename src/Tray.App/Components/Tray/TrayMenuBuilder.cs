@@ -15,7 +15,6 @@ public class TrayMenuBuilder(AppState appState)
         var separator = new SeparatorMenuItem();
         var quitItem = new ButtonMenuItem { Text = "🚪 Quit" };
 
-        // Подписки на события будут настроены внешне через события
         menu.Items.AddRange([
             statusItem,
             new SeparatorMenuItem(),
