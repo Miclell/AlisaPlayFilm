@@ -64,14 +64,14 @@ jobs:
       - name: Prepare artifact
         shell: bash
         run: |
-          mkdir -p artifacts/${{ matrix.rid }}
-          mv publish/${{ matrix.rid }}/${{ matrix.binary_name }} artifacts/${{ matrix.rid }}/${{ matrix.asset_name }}
+          mkdir -p artifacts
+          mv publish/${{ matrix.rid }}/${{ matrix.binary_name }} artifacts/${{ matrix.asset_name }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.rid }}-${{ github.sha }}
-          path: artifacts/${{ matrix.rid }}/*
+          name: ${{ matrix.rid }}-binary
+          path: artifacts/${{ matrix.asset_name }}
           retention-days: 1
 
   create-release:
@@ -84,16 +84,17 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: artifacts
-          pattern: '*-${{ github.sha }}'
-          merge-multiple: true
+          pattern: '*'
+          merge-multiple: false
+
+      - name: List downloaded files
+        run: find artifacts -type f
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            artifacts/win-x64/*
-            artifacts/linux-x64/*
-            artifacts/osx-x64/*
+            artifacts/**/*
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
