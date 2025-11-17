@@ -21,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(PlatformPackage)' != ''">
-        <PackageReference Include="$(PlatformPackage)" Version="2.8.0"/>
+        <PackageReference Include="$(PlatformPackage)" Version="$(EtoVersion)"/>
     </ItemGroup>
 
     <ItemGroup>

@@ -18,18 +18,21 @@ jobs:
             binary_name: AlisaPlayFilm.exe
             asset_name: AlisaPlayFilm-Windows-x64.exe
             platform_package: Eto.Platform.Windows
+            platform_version: 2.10.2
           - platform: ubuntu-latest
             rid: linux-x64
             target_framework: net9.0
             binary_name: AlisaPlayFilm
             asset_name: AlisaPlayFilm-Linux-x64
             platform_package: Eto.Platform.Gtk
+            platform_version: 2.10.2
           - platform: macos-latest
             rid: osx-x64
             target_framework: net9.0
             binary_name: AlisaPlayFilm
             asset_name: AlisaPlayFilm-macOS-x64
             platform_package: Eto.Platform.Mac
+            platform_version: 2.4.1
 
     runs-on: ${{ matrix.platform }}
 
@@ -53,6 +56,7 @@ jobs:
             -r ${{ matrix.rid }} \
             -p:TargetFrameworkOverride=${{ matrix.target_framework }} \
             -p:PlatformPackage=${{ matrix.platform_package }} \
+            -p:EtoVersion=${{ matrix.platform_version }} \
             --self-contained true \
             -p:PublishSingleFile=true \
             -o publish/${{ matrix.rid }}
