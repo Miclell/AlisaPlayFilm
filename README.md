@@ -273,8 +273,9 @@ dotnet run --project src/Tray.App/Tray.App.csproj
 # Windows
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r win-x64 \
-  /p:TargetFrameworkOverride=net9.0-windows \
+  -p:TargetFrameworkOverride=net9.0-windows \
   -p:PlatformPackage=Eto.Platform.Windows \
+  -p:EtoVersion=2.10.2 \
   --self-contained true \
   -p:PublishSingleFile=true \
   -o publish/win-x64
@@ -282,8 +283,9 @@ dotnet publish src/Tray.App/Tray.App.csproj \
 # Linux
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r linux-x64 \
-  /p:TargetFrameworkOverride=net9.0 \
+  -p:TargetFrameworkOverride=net9.0 \
   -p:PlatformPackage=Eto.Platform.Gtk \
+  -p:EtoVersion=2.10.2 \
   --self-contained true \
   -p:PublishSingleFile=true \
   -o publish/linux-x64
@@ -291,14 +293,13 @@ dotnet publish src/Tray.App/Tray.App.csproj \
 # macOS
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r osx-x64 \
-  /p:TargetFrameworkOverride=net9.0 \
-  -p:PlatformPackage=Eto.Platform.Mac \
+  -p:TargetFrameworkOverride=net9.0 \
+  -p:PlatformPackage=Eto.Platform.Mac64 \
+  -p:EtoVersion=2.10.2 \
   --self-contained true \
   -p:PublishSingleFile=true \
   -o publish/osx-x64
 ```
-
-> **Примечание:** При публикации необходимо явно указывать `TargetFrameworkOverride` через `/p:` (глобальное свойство), чтобы оно применялось ко всем зависимым проектам. По умолчанию используется `net9.0-windows` для разработки на Windows.
 
 ### Расширение функциональности
 
