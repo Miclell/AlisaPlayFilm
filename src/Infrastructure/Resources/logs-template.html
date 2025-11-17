@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🎯 Live Logs</title>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1" name="viewport">
+    <style>
+        /* Стили остаются такими же, но добавляем настройки */
+        .config-panel {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .config-panel.visible {
+            display: flex;
+        }
+
+        .config-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .config-group label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .config-group input, .config-group select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+
+        :root {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent: #007acc;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --error: #f44336;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header h1 {
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            background: var(--bg-secondary);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .controls button:hover {
+            background: #005a9e;
+        }
+
+        .controls button.danger {
+            background: var(--error);
+        }
+
+        .log-container {
+            background: var(--bg-secondary);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .log-entry {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            align-items: start;
+        }
+
+        .log-meta {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            min-width: 200px;
+        }
+
+        .timestamp {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .level {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Level styles */
+        .level-trace {
+            background: #616161;
+            color: white;
+        }
+
+        .level-debug {
+            background: #757575;
+            color: white;
+        }
+
+        .level-information {
+            background: #2196f3;
+            color: white;
+        }
+
+        .level-warning {
+            background: #ff9800;
+            color: black;
+        }
+
+        .level-error {
+            background: #f44336;
+            color: white;
+        }
+
+        .level-critical {
+            background: #d32f2f;
+            color: white;
+        }
+
+        .log-entry.trace {
+            border-left: 3px solid #616161;
+        }
+
+        .log-entry.debug {
+            border-left: 3px solid #757575;
+        }
+
+        .log-entry.information {
+            border-left: 3px solid #2196f3;
+        }
+
+        .log-entry.warning {
+            border-left: 3px solid #ff9800;
+        }
+
+        .log-entry.error {
+            border-left: 3px solid #f44336;
+        }
+
+        .log-entry.critical {
+            border-left: 3px solid #d32f2f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="controls">
+    <button onclick="toggleAutoScroll()">
+        📜 Auto-scroll: <span id="autoScrollStatus">On</span>
+    </button>
+    <button onclick="exportLogs()">💾 Export</button>
+    <button onclick="showConfig()">⚙️ Config</button>
+    <button class="danger" onclick="clearLogs()">🗑️ Clear</button>
+
+    <div class="stats">
+        <div class="stat" id="totalLogs">Total: 0</div>
+        <div class="stat" id="errorCount">Errors: 0</div>
+        <div class="stat" id="memoryUsage">Memory: 0</div>
+    </div>
+</div>
+
+<div class="config-panel" id="configPanel">
+    <div class="config-group">
+        <label>Log Lifetime (hours):</label>
+        <input id="logLifetime" max="168" min="1" type="number" value="1">
+        <button onclick="updateConfig()">Apply</button>
+    </div>
+</div>
+
+<div class="log-container" id="logContainer"></div>
+
+<div data-logs="{{LOGS_DATA}}" id="logs-data"></div>
+
+<script>
+    let autoScroll = true;
+    let logCount = 0;
+    let errorCount = 0;
+    let eventSource = null;
+
+    function loadExistingLogs() {
+        const logsElement = document.getElementById('logs-data');
+        const logsJson = logsElement.getAttribute('data-logs');
+
+        if (logsJson) {
+            try {
+                const existingLogs = JSON.parse(logsJson);
+                console.log('📦 Loaded existing logs:', existingLogs.length);
+                existingLogs.forEach(addLog);
+                updateStats();
+            } catch (e) {
+                console.error('Failed to parse existing logs:', e);
+            }
+        }
+    }
+
+    function addLog(entry) {
+        const container = document.getElementById('logContainer');
+        const levelClass = entry.logLevel.toLowerCase();
+
+        const logEntry = document.createElement('div');
+        logEntry.className = `log-entry ${levelClass}`;
+        logEntry.innerHTML = `
+            <div class="log-meta">
+                <span class="timestamp">${formatTime(new Date(entry.timestamp))}</span>
+                <span class="level level-${levelClass}">${entry.logLevel}</span>
+            </div>
+            <div class="log-content">
+                <div class="category">${escapeHtml(entry.category)}</div>
+                <div class="message">${escapeHtml(entry.message)}</div>
+                ${entry.exception ? `<pre class="exception">${escapeHtml(entry.exception)}</pre>` : ''}
+            </div>
+        `;
+
+        container.appendChild(logEntry);
+
+        logCount++;
+        if (entry.logLevel === 'Error' || entry.logLevel === 'Critical') errorCount++;
+        updateStats();
+
+        if (autoScroll) {
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+    }
+
+    function updateStats() {
+        document.getElementById('totalLogs').textContent = `Total: ${logCount}`;
+        document.getElementById('errorCount').textContent = `Errors: ${errorCount}`;
+        document.getElementById('memoryUsage').textContent = `Memory: ${Math.round(performance.memory?.usedJSHeapSize / 1024 / 1024) || 0}MB`;
+    }
+
+    function toggleAutoScroll() {
+        autoScroll = !autoScroll;
+        document.getElementById('autoScrollStatus').textContent = autoScroll ? 'On' : 'Off';
+    }
+
+    function exportLogs() {
+        const logs = Array.from(document.querySelectorAll('.log-entry'))
+            .map(entry => {
+                const time = entry.querySelector('.timestamp').textContent;
+                const level = entry.querySelector('.level').textContent;
+                const category = entry.querySelector('.category').textContent;
+                const message = entry.querySelector('.message').textContent;
+                const exception = entry.querySelector('.exception')?.textContent;
+
+                let log = `[${time}] ${level} ${category}: ${message}`;
+                if (exception) log += `\nEXCEPTION: ${exception}`;
+                return log;
+            })
+            .join('\n');
+
+        const blob = new Blob([logs], {type: 'text/plain'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `logs-${new Date().toISOString().replace(/[:.]/g, '-')}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    function showConfig() {
+        document.getElementById('configPanel').classList.toggle('visible');
+    }
+
+    function clearLogs() {
+        document.getElementById('logContainer').innerHTML = '';
+        logCount = 0;
+        errorCount = 0;
+        updateStats();
+    }
+
+    async function updateConfig() {
+        const lifetime = document.getElementById('logLifetime').value;
+
+        try {
+            const response = await fetch('/api/logs/config', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({logLifetimeHours: parseInt(lifetime)})
+            });
+
+            if (response.ok) {
+                alert('Configuration updated');
+            }
+        } catch (e) {
+            alert('Failed to update configuration');
+        }
+    }
+
+    function formatTime(date) {
+        return date.toLocaleTimeString() + '.' + date.getMilliseconds().toString().padStart(3, '0');
+    }
+
+    function escapeHtml(unsafe) {
+        return unsafe
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function connectEventSource() {
+        if (eventSource) {
+            eventSource.close();
+        }
+
+        eventSource = new EventSource('/api/logs/stream');
+
+        eventSource.onopen = function (event) {
+            console.log('SSE connection opened');
+        };
+
+        eventSource.onmessage = function (event) {
+            try {
+                const entry = JSON.parse(event.data);
+                addLog(entry);
+            } catch (e) {
+                console.error('Error parsing log entry:', e, event.data);
+            }
+        };
+
+        eventSource.onerror = function (event) {
+            console.error('SSE error:', event);
+        };
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        console.log('🚀 Initializing log viewer...');
+        loadExistingLogs();
+        connectEventSource();
+        updateStats();
+    });
+
+    window.addEventListener('beforeunload', function () {
+        if (eventSource) {
+            eventSource.close();
+        }
+    });
+</script>
+</body>
+</html>

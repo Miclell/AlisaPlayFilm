@@ -7,8 +7,8 @@ namespace Application.Services;
 
 public class FilmSearchOrchestrator : IFilmSearchOrchestrator
 {
-    private readonly IReadOnlyList<IFilmSearchService> _searchServices;
     private readonly ILogger<FilmSearchOrchestrator> _logger;
+    private readonly IReadOnlyList<IFilmSearchService> _searchServices;
 
     public FilmSearchOrchestrator(
         IEnumerable<IFilmSearchService> searchServices,
@@ -28,7 +28,7 @@ public class FilmSearchOrchestrator : IFilmSearchOrchestrator
 
         using var scope = _logger.BeginScope("Film search for '{FilmName}'", filmName);
         _logger.LogInformation("Starting film search across {ServiceCount} services", _searchServices.Count);
-        
+
         LogAvailableServices();
 
         foreach (var searchService in _searchServices)
@@ -42,19 +42,20 @@ public class FilmSearchOrchestrator : IFilmSearchOrchestrator
         return null;
     }
 
-    private async Task<Film?> TrySearchOnServiceAsync(IFilmSearchService service, string filmName, CancellationToken cancellationToken)
+    private async Task<Film?> TrySearchOnServiceAsync(IFilmSearchService service, string filmName,
+        CancellationToken cancellationToken)
     {
         try
         {
             _logger.LogDebug("Searching on {Source}", service.Source);
             var film = await service.SearchAsync(filmName, cancellationToken);
-            
+
             if (film != null)
             {
                 _logger.LogInformation("Found on {Source}: '{Title}'", service.Source, film.Title);
                 return film;
             }
-            
+
             _logger.LogDebug("Not found on {Source}", service.Source);
             return null;
         }
@@ -72,13 +73,13 @@ public class FilmSearchOrchestrator : IFilmSearchOrchestrator
 
     private void LogAvailableServices()
     {
-        if (!_logger.IsEnabled(LogLevel.Debug)) 
+        if (!_logger.IsEnabled(LogLevel.Debug))
             return;
-        
+
         var services = _searchServices
             .Select((s, i) => $"{i + 1}. {s.Source}")
             .ToArray();
-            
+
         _logger.LogDebug("Available services:\n{Services}", string.Join("\n", services));
     }
 }

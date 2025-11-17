@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <AssemblyName>AlisaPlayFilm</AssemblyName>
+        <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+        <IncludeAllContentForSelfExtract>true</IncludeAllContentForSelfExtract>
+        <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    </PropertyGroup>
+
+    <!-- На Windows скрываем консоль, используя WinExe -->
+    <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
+        <OutputType>WinExe</OutputType>
+        <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Eto.Forms" Version="2.8.0"/>
+    </ItemGroup>
+
+    <!-- Для разработки или если PlatformPackage не указан -->
+    <ItemGroup Condition="'$(PlatformPackage)' == ''">
+        <PackageReference Include="Eto.Platform.Windows" Version="2.8.0"/>
+    </ItemGroup>
+
+    <!-- Для публикации с указанной платформой -->
+    <ItemGroup Condition="'$(PlatformPackage)' != ''">
+        <PackageReference Include="$(PlatformPackage)" Version="2.8.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Server\Server.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Include="..\Server\appsettings.json" Link="Config\appsettings.json"/>
+        <EmbeddedResource Include="..\Server\appsettings.Development.json" Link="Config\appsettings.Development.json"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+        <None Update="..\Server\appsettings.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="..\Server\appsettings.Development.json">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Копируем иконку в выходную папку -->
+        <None Update="Resources\icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+    <!-- Встраиваем иконку для Windows -->
+    <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
+        <None Include="Resources\icon.ico">
+            <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+</Project>

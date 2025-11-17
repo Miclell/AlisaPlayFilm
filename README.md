@@ -29,7 +29,7 @@
 ## Требования
 
 - .NET 9.0
-- Windows или Linux
+- Windows, Linux или MacOS
 - Браузер для открытия фильмов
 
 ## Запуск
@@ -41,14 +41,26 @@ dotnet run --project src/Server/Server.csproj
 ```
 
 Приложение будет доступно по адресу:
-- HTTP: `http://localhost:5292`
-- HTTPS: `https://localhost:7289`
+- HTTP: `http://localhost:8080`
+- HTTPS: `https://localhost:8081`
 
 ### Docker
 
 ```bash
+cd ops
 docker-compose up --build
 ```
+
+## Конфигурация
+
+Базовые настройки (`appsettings*.json`) вшиты в бинарник, но при первом запуске копируются в пользовательскую директорию, чтобы вы могли менять порты и прочие параметры:
+
+- **Windows:** `%AppData%\AlisaPlayFilm\appsettings.json`
+- **Linux:** `${XDG_CONFIG_HOME:-~/.config}/AlisaPlayFilm/appsettings.json`
+- **macOS:** `~/Library/Application Support/AlisaPlayFilm/appsettings.json`
+
+Редактируйте эти файлы для своей установки — приложение автоматически перечитывает их при изменении.  
+В режиме разработки (конфигурация `Debug`) по-прежнему можно работать с исходными файлами `src/Server/appsettings*.json`, они копируются рядом со сборкой и имеют приоритет поверх пользовательских.
 
 ## Настройка вебхука Яндекс Алисы
 
@@ -83,15 +95,15 @@ docker-compose up --build
 ```json
 {
   "response": {
-    "text": "Открываю фильм: Матрица",
+    "text": "Открываю фильм: Матрица (фильм, 1999)",
     "end_session": true
   },
+  "version": "1.0",
   "session": {
     "session_id": "123",
-    "user_id": "456",
-    "message_id": 1
-  },
-  "version": "1.0"
+    "user_id": "125",
+    "message_id": 0
+  }
 }
 ```
 

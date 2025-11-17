@@ -1,4 +1,6 @@
-﻿using Core.Entities;
+﻿using System.Net;
+using System.Text.RegularExpressions;
+using Core.Entities;
 using Core.Enums;
 using Core.Interfaces;
 using HtmlAgilityPack;
@@ -12,21 +14,21 @@ public partial class KinopoiskFilmSearchService(
     ILogger<KinopoiskFilmSearchService> logger) : IFilmSearchService
 {
     public SearchSource Source { get; } = SearchSource.Kinopoisk;
-    
+
     public async Task<Film?> SearchAsync(string filmName, CancellationToken cancellationToken = default)
     {
         try
         {
             var httpClient = httpClientFactory.CreateClient("BrowserClient");
-            
+
             var encodedFilmName = Uri.EscapeDataString(filmName);
             var searchUrl = $"https://www.kinopoisk.ru/index.php?kp_query={encodedFilmName}";
-            
+
             logger.LogInformation("Kinopoisk: Sending search request");
             logger.LogDebug("Search URL: {Url}", searchUrl);
-            
+
             var response = await httpClient.GetStringAsync(searchUrl, cancellationToken);
-            
+
             var htmlDoc = new HtmlDocument();
             htmlDoc.LoadHtml(response);
             if (captchaDetectionService.HasCaptcha(htmlDoc))
@@ -34,38 +36,38 @@ public partial class KinopoiskFilmSearchService(
                 logger.LogWarning("Captcha detected on {Url} (1)", searchUrl);
                 return null;
             }
-                
+
             var filmLink = htmlDoc.DocumentNode
                 .SelectNodes("//a[contains(@href, '/film/')]").FirstOrDefault();
-            
+
             var filmUrl = filmLink!.GetAttributeValue("href", "");
 
             var match = GetFilmIdEx().Match(filmUrl);
             if (!match.Success) return null;
-            
+
             var filmPageUrl = $"https://www.kinopoisk.ru/film/{match.Groups[1].Value}/";
 
             var filmResponse = await httpClient.GetStringAsync(filmPageUrl, cancellationToken);
 
             var filmDoc = new HtmlDocument();
             filmDoc.LoadHtml(filmResponse);
-            
+
             if (captchaDetectionService.HasCaptcha(filmDoc))
             {
                 logger.LogWarning("Captcha detected on {Url} (2)", filmPageUrl);
                 return null;
             }
-            
+
             TryGetVideoUrl(filmDoc, out filmUrl);
 
             if (filmUrl is not null)
-                return new Film()
+                return new Film
                 {
                     Title = filmName,
                     Url = filmUrl,
                     Source = SearchSource.Kinopoisk
                 };
-            
+
             return null;
         }
         catch (Exception e)
@@ -77,7 +79,8 @@ public partial class KinopoiskFilmSearchService(
 
     private static void TryGetVideoUrl(HtmlDocument filmDoc, out string? filmUrl)
     {
-        var watchElements = filmDoc.DocumentNode.SelectNodes("//*[contains(normalize-space(text()), 'Смотреть фильм')]");
+        var watchElements =
+            filmDoc.DocumentNode.SelectNodes("//*[contains(normalize-space(text()), 'Смотреть фильм')]");
         var hasWatchOption = watchElements is { Count: > 0 };
 
         filmUrl = null;
@@ -90,16 +93,16 @@ public partial class KinopoiskFilmSearchService(
                 .FirstOrDefault(n => n.Name == "a");
 
             if (interactiveParent == null) continue;
-            
+
             filmUrl = interactiveParent.GetAttributeValue("href", "");
-                    
+
             if (!string.IsNullOrEmpty(filmUrl))
                 break;
         }
 
-        filmUrl = System.Net.WebUtility.HtmlDecode(filmUrl);
+        filmUrl = WebUtility.HtmlDecode(filmUrl);
     }
 
-    [System.Text.RegularExpressions.GeneratedRegex(@"/film/(\d+)")]
-    private static partial System.Text.RegularExpressions.Regex GetFilmIdEx();
+    [GeneratedRegex(@"/film/(\d+)")]
+    private static partial Regex GetFilmIdEx();
 }

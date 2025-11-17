@@ -1,0 +1,90 @@
+﻿name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    strategy:
+      matrix:
+        platform: [windows-latest, ubuntu-latest, macos-latest]
+        include:
+          - platform: windows-latest
+            rid: win-x64
+            binary_name: AlisaPlayFilm.exe
+            asset_name: AlisaPlayFilm-Windows-x64.exe
+            platform_package: Eto.Platform.Windows
+          - platform: ubuntu-latest
+            rid: linux-x64
+            binary_name: AlisaPlayFilm
+            asset_name: AlisaPlayFilm-Linux-x64
+            platform_package: Eto.Platform.Gtk
+          - platform: macos-latest
+            rid: osx-x64
+            binary_name: AlisaPlayFilm
+            asset_name: AlisaPlayFilm-macOS-x64
+            platform_package: Eto.Platform.Mac
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build and Publish
+        run: |
+          dotnet publish src/Tray.App/Tray.App.csproj \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            -p:PlatformPackage=${{ matrix.platform_package }} \
+            --self-contained true \
+            -p:PublishSingleFile=true \
+            -o publish/${{ matrix.rid }}
+
+      - name: Prepare artifact
+        shell: bash
+        run: |
+          mkdir -p artifacts/${{ matrix.rid }}
+          mv publish/${{ matrix.rid }}/${{ matrix.binary_name }} artifacts/${{ matrix.rid }}/${{ matrix.asset_name }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}-${{ github.sha }}
+          path: artifacts/${{ matrix.rid }}/*
+          retention-days: 1
+
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: '*-${{ github.sha }}'
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/win-x64/*
+            artifacts/linux-x64/*
+            artifacts/osx-x64/*
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

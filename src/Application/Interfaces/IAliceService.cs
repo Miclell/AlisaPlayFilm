@@ -6,4 +6,3 @@ public interface IAliceService
 {
     Task<AliceResponse> ProcessRequestAsync(AliceRequest request, CancellationToken cancellationToken = default);
 }
-

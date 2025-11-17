@@ -12,4 +12,3 @@ public class Response
     public string Text { get; set; } = string.Empty;
     public bool EndSession { get; set; } = true;
 }
-

@@ -1,3 +1,4 @@
+using System.Text.Json;
 using Application.DTOs;
 using Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -15,7 +16,8 @@ public class AliceController(
     [HttpPost]
     [ProducesResponseType(typeof(AliceResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AliceResponse>> Post([FromBody] AliceRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<AliceResponse>> Post([FromBody] AliceRequest request,
+        CancellationToken cancellationToken)
     {
         try
         {
@@ -26,13 +28,13 @@ public class AliceController(
             logger.LogDebug("Command: {Command}", request.Request?.Command);
             logger.LogDebug("Original Utterance: {OriginalUtterance}", request.Request?.OriginalUtterance);
             logger.LogDebug("Version: {Version}", request.Version);
-            logger.LogDebug("Full Request JSON: {RequestJson}", System.Text.Json.JsonSerializer.Serialize(request));
-            
+            logger.LogDebug("Full Request JSON: {RequestJson}", JsonSerializer.Serialize(request));
+
             var response = await aliceService.ProcessRequestAsync(request, cancellationToken);
-            
+
             logger.LogDebug("Response Text: {ResponseText}", response.Response?.Text);
-            logger.LogDebug("Full Response JSON: {ResponseJson}", System.Text.Json.JsonSerializer.Serialize(response));
-            
+            logger.LogDebug("Full Response JSON: {ResponseJson}", JsonSerializer.Serialize(response));
+
             return Ok(response);
         }
         catch (Exception ex)
@@ -42,4 +44,3 @@ public class AliceController(
         }
     }
 }
-

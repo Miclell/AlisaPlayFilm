@@ -15,7 +15,7 @@ public class BrowserService(ILogger<BrowserService> logger) : IBrowserService
 
             var processStartInfo = CreateProcessStartInfo(url);
             Process.Start(processStartInfo);
-            
+
             return Task.CompletedTask;
         }
         catch (Exception ex)
@@ -49,8 +49,7 @@ public class BrowserService(ILogger<BrowserService> logger) : IBrowserService
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
-        
+
         throw new PlatformNotSupportedException("Unsupported operating system");
     }
 }
-

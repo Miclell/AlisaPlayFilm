@@ -1,0 +1,19 @@
+﻿<Project>
+    <PropertyGroup>
+        <TargetFramework Condition="'$(RuntimeIdentifier)' == ''">net9.0-windows</TargetFramework>
+
+        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'win-x64'">net9.0-windows</TargetFramework>
+        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'linux-x64'">net9.0</TargetFramework>
+        <TargetFramework Condition="'$(RuntimeIdentifier)' == 'osx-x64'">net9.0</TargetFramework>
+        <Nullable>enable</Nullable>
+
+        <ImplicitUsings>enable</ImplicitUsings>
+        <PublishSingleFile>true</PublishSingleFile>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <DebugSymbols>false</DebugSymbols>
+        <DebugType>none</DebugType>
+    </PropertyGroup>
+</Project>

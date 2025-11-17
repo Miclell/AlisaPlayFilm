@@ -5,7 +5,6 @@ namespace Core.Interfaces;
 
 public interface IFilmSearchService
 {
-    Task<Film?> SearchAsync(string filmName, CancellationToken cancellationToken = default);
     SearchSource Source { get; }
+    Task<Film?> SearchAsync(string filmName, CancellationToken cancellationToken = default);
 }
-

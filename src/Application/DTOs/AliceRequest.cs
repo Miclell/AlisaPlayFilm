@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace Application.DTOs;
 
 public class AliceRequest
@@ -18,7 +20,10 @@ public class Request
 public class Nlu
 {
     public string[] Tokens { get; set; } = [];
-    public string[] Entities { get; set; } = [];
+
+    [JsonIgnore] public object[] Entities { get; set; } = [];
+
+    [JsonIgnore] public Dictionary<string, object> Intents { get; set; } = new();
 }
 
 public class Session
@@ -27,4 +32,3 @@ public class Session
     public string UserId { get; set; } = string.Empty;
     public int MessageId { get; set; }
 }
-
