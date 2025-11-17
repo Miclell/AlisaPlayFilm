@@ -7,7 +7,6 @@
         <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
     </PropertyGroup>
 
-    <!-- На Windows скрываем консоль, используя WinExe -->
     <PropertyGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
         <OutputType>WinExe</OutputType>
         <ApplicationIcon>Resources\icon.ico</ApplicationIcon>
@@ -17,12 +16,10 @@
         <PackageReference Include="Eto.Forms" Version="2.8.0"/>
     </ItemGroup>
 
-    <!-- Для разработки или если PlatformPackage не указан -->
     <ItemGroup Condition="'$(PlatformPackage)' == ''">
         <PackageReference Include="Eto.Platform.Windows" Version="2.8.0"/>
     </ItemGroup>
 
-    <!-- Для публикации с указанной платформой -->
     <ItemGroup Condition="'$(PlatformPackage)' != ''">
         <PackageReference Include="$(PlatformPackage)" Version="2.8.0"/>
     </ItemGroup>
@@ -46,13 +43,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <!-- Копируем иконку в выходную папку -->
         <None Update="Resources\icon.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </None>
     </ItemGroup>
 
-    <!-- Встраиваем иконку для Windows -->
     <ItemGroup Condition="'$(TargetFramework)' == 'net9.0-windows'">
         <None Include="Resources\icon.ico">
             <CopyToOutputDirectory>Never</CopyToOutputDirectory>

@@ -273,6 +273,7 @@ dotnet run --project src/Tray.App/Tray.App.csproj
 # Windows
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r win-x64 \
+  -p:TargetFramework=net9.0-windows \
   -p:PlatformPackage=Eto.Platform.Windows \
   --self-contained true \
   -p:PublishSingleFile=true \
@@ -281,6 +282,7 @@ dotnet publish src/Tray.App/Tray.App.csproj \
 # Linux
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r linux-x64 \
+  -p:TargetFramework=net9.0 \
   -p:PlatformPackage=Eto.Platform.Gtk \
   --self-contained true \
   -p:PublishSingleFile=true \
@@ -289,11 +291,14 @@ dotnet publish src/Tray.App/Tray.App.csproj \
 # macOS
 dotnet publish src/Tray.App/Tray.App.csproj \
   -c Release -r osx-x64 \
+  -p:TargetFramework=net9.0 \
   -p:PlatformPackage=Eto.Platform.Mac \
   --self-contained true \
   -p:PublishSingleFile=true \
   -o publish/osx-x64
 ```
+
+> **Примечание:** При публикации необходимо явно указывать `TargetFramework`, так как по умолчанию используется `net9.0-windows` для разработки на Windows.
 
 ### Расширение функциональности
 
