@@ -1,4 +1,4 @@
-﻿name: Build and Release
+name: Build and Release
 
 on:
   push:
@@ -46,6 +46,7 @@ jobs:
         run: dotnet restore
 
       - name: Build and Publish
+        shell: bash
         run: |
           dotnet publish src/Tray.App/Tray.App.csproj \
             -c Release \
