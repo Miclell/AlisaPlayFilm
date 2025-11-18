@@ -167,7 +167,6 @@ dotnet run --project src/Server/Server.csproj
 Если у вас нет статического IP или не хотите пробрасывать порты:
 
 - Используйте **туннели** (Cloudflare Tunnel, Ngrok, LocalTunnel) для создания публичного HTTPS URL
-- Разверните приложение на **облачном VPS** с доменным именем и Let's Encrypt сертификатом
 
 ## API Endpoints
 
