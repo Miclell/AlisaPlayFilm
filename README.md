@@ -39,7 +39,7 @@
 
 ### Из релизов (рекомендуется)
 
-1. Перейдите на страницу [Releases](https://github.com/your-username/AlisaPlayFilm/releases) (замените `your-username` на ваш GitHub username)
+1. Перейдите на страницу [Releases](https://github.com/Miclell/AlisaPlayFilm/releases)
 2. Скачайте бинарник для вашей ОС:
    - **Windows:** `AlisaPlayFilm-Windows-x64.exe`
    - **Linux:** `AlisaPlayFilm-Linux-x64`
